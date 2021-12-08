@@ -1,0 +1,33 @@
+# bash completion for tagit                                   -*- shell-script -*-
+
+_tagit()
+{
+    local arg cur words cword
+    _init_completion -n = || return
+
+    # Search in reverse from the current position to allow multiple arguments to parameters
+    for arg in $(printf '%s\n' "${COMP_WORDS[@]::$COMP_CWORD}" | tac); do
+        case $arg in
+            --cache)
+                _filedir
+                return
+                ;;
+            -f|--files)
+                _filedir
+                return
+                ;;
+            -t|--tags)
+                COMPREPLY=( $($1 --autocomplete "$cur") )
+                return
+                ;;
+            -r|--remove-tag)
+                COMPREPLY=( $($1 --autocomplete "$cur") )
+                return
+                ;;
+        esac
+    done
+
+    COMPREPLY=( $( compgen -W '$( _parse_help "$1" )' -- "$cur" ) )
+    [[ $COMPREPLY == *= ]] && compopt -o nospace
+} &&
+complete -F _tagit tagit
