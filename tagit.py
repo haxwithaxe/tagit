@@ -148,7 +148,7 @@ def tag_files(files, add_tags, remove_tags, write_method):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-w', '--write-cache', action='store_true',
+    parser.add_argument('--ro-cache', action='store_true',
                         default=False)
     parser.add_argument('--cache', default=os.path.join(os.curdir, DEFAULT_TAG_CACHE))
     parser.add_argument('-c', '--copy', action='store_true', default=False)
@@ -187,8 +187,7 @@ def main():
         write_method = copy_write_method
     if args.link:
         write_method = link_write_method
-
-    if not args.write_cache:
+    if not args.ro_cache:
         write_tag_cache(args.tags, args.cache)
     tag_files(args.files, args.tags, args.remove_tags, write_method)
 
