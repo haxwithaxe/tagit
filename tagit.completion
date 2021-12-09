@@ -31,3 +31,4 @@ _tagit()
     [[ $COMPREPLY == *= ]] && compopt -o nospace
 } &&
 complete -F _tagit tagit
+complete -F _tagit tagit.py
