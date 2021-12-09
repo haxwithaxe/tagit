@@ -5,7 +5,8 @@ _tagit()
     local arg cur words cword
     _init_completion -n = || return
 
-    # Search in reverse from the current position to allow multiple arguments to parameters
+    # Search in reverse from the current position to allow multiple arguments
+    #  to parameters
     for arg in $(printf '%s\n' "${COMP_WORDS[@]::$COMP_CWORD}" | tac); do
         case $arg in
             --cache)
@@ -31,4 +32,6 @@ _tagit()
     [[ $COMPREPLY == *= ]] && compopt -o nospace
 } &&
 complete -F _tagit tagit
-complete -F _tagit tagit.py
+# This only works if this file is sourced directly or is named "tagit.py" in
+#  one of the bash completion directories
+complete -F _tagit tagit.py  
