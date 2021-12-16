@@ -5,8 +5,6 @@ import glob
 import logging
 import os
 import shutil
-# For unit tests to reference in case it changes
-from shutil import move as move_write_method
 import sys
 
 
@@ -97,43 +95,58 @@ def reconsile_tags(existing_tags, new_tags, remove_tags):
     return uniq_tags
 
 
-def copy_write_method(filename, new_filename):
-    name, _, ext = split_filename(filename)
+def copy_write_method(filename, name, add_tags, remove_tags, ext):
+    tags = []
     tagged = glob.glob(join_filename(name, ['*'], ext))
-    for t in tagged:
-        if t != filename:
-            os.remove(t)
+    for tagged_file in tagged:
+        if tagged_file != filename:
+            _, tgs, _ = split_filename(tagged_file)
+            tags.extend(tgs)
+            os.remove(tagged_file)
+    uniq_tags = reconsile_tags(tags, add_tags, remove_tags)
+    new_filename = join_filename(name, uniq_tags, ext)
     if filename == new_filename:
         return
     shutil.copy(filename, new_filename)
+    return new_filename
 
 
-def link_write_method(filename, new_filename):
+def link_write_method(filename, name, add_tags, remove_tags, ext):
+    tags = []
     if not os.path.exists(filename):
         raise FileNotFoundError(filename)
-    name, _, ext = split_filename(filename)
     tagged = glob.glob(join_filename(name, ['*'], ext))
-    for t in tagged:
-        if t != filename and os.path.islink(t):
-            os.remove(t)
+    for tagged_file in tagged:
+        if tagged_file != filename and os.path.islink(tagged_file):
+            _, tgs, _ = split_filename(tagged_file)
+            tags.extend(tgs)
+            os.remove(tagged_file)
+    uniq_tags = reconsile_tags(tags, add_tags, remove_tags)
+    new_filename = join_filename(name, uniq_tags, ext)
     if filename == new_filename:
         return
     os.symlink(os.path.abspath(filename), new_filename)
+    return new_filename
 
+def move_write_method(filename, name, add_tags, remove_tags, ext):
+    uniq_tags = reconsile_tags([], add_tags, remove_tags)
+    new_filename = join_filename(name, uniq_tags, ext)
+    if filename == new_filename:
+        return
+    shutil.move(filename, new_filename)
+    return new_filename
 
 def tag_file(filename, add_tags, remove_tags, write_method):
     name, existing_tags, ext = split_filename(filename)
-    uniq_tags = reconsile_tags(existing_tags, add_tags, remove_tags)
-    new_filename = join_filename(name, uniq_tags, ext)
-    if new_filename == filename:
-        logging.info('No new tags: %s', add_tags)
-        return
+    add_tags.extend(existing_tags)
     try:
-        write_method(filename, new_filename)
+        new_filename = write_method(filename, name, add_tags, remove_tags, ext)
     except FileNotFoundError:
         raise FailedToTag('Failed to tag "{}" because it does not exist.'.format(filename))
     except PermissionError:
         raise FailedToTag('Failed to tag "{}" because the user doesn\'t have permission.'.format(filename))
+    if not new_filename:
+        return True
     if write_method == move_write_method:
         logging.info('Moved "%s" to "%s"', filename, new_filename)
     else:

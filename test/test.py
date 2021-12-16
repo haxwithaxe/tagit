@@ -12,6 +12,7 @@ import tagit
 TEST_TAG_CACHE = 'tagit_test.tags.cache'
 TEST_INPUT_FILE = 'tagit_test.zip'
 TEST_OUTPUT_FILE = 'tagit_test._tags.bar.foo._tags.zip'
+TEST_OUTPUT_PARTS = ['tagit_test', ['bar', 'foo'], [], '.zip']
 TEST_OLD_FILE = 'tagit_test._tags.foo._tags.zip'
 MISSING_DIRECTORY = 'this directory doesn\'t exist'
 MISSING_DIRECTORY_CACHE_FILE = 'this directory doesn\'t exist/tagit_test.tags.cache'
@@ -134,7 +135,7 @@ class CopyWriteMethod(_FileModTestCase):
     def test_copy_write_method_missing_file(self):
         assert not os.path.exists(self._path(TEST_INPUT_FILE))
         with self.assertRaises(FileNotFoundError):
-            tagit.copy_write_method(self._path(TEST_INPUT_FILE), self._path(TEST_OUTPUT_FILE))
+            tagit.copy_write_method(self._path(TEST_INPUT_FILE), self._path(TEST_OUTPUT_PARTS[0]), *TEST_OUTPUT_PARTS[1:])
         self.assertFalse(os.path.exists(self._path(TEST_OUTPUT_FILE)))
 
     def test_copy_write_method_bad_permission(self):
@@ -142,7 +143,7 @@ class CopyWriteMethod(_FileModTestCase):
         open(self._path(TEST_OLD_FILE), 'w').close()
         os.chmod(self.tmpdir, mode=stat.S_IRUSR|stat.S_IXUSR)  # Disable write access
         with self.assertRaises(PermissionError):
-            tagit.copy_write_method(self._path(TEST_INPUT_FILE), self._path(TEST_OUTPUT_FILE))
+            tagit.copy_write_method(self._path(TEST_INPUT_FILE), self._path(TEST_OUTPUT_PARTS[0]), *TEST_OUTPUT_PARTS[1:])
         self.assertTrue(os.path.isfile(self._path(TEST_INPUT_FILE)))
         self.assertTrue(os.path.isfile(self._path(TEST_OLD_FILE)))
         self.assertFalse(os.path.exists(self._path(TEST_OUTPUT_FILE)))
@@ -150,7 +151,7 @@ class CopyWriteMethod(_FileModTestCase):
     def test_copy_write_method_remove_old_and_copy(self):
         open(self._path(TEST_INPUT_FILE), 'w').close()
         open(self._path(TEST_OLD_FILE), 'w').close()
-        tagit.copy_write_method(self._path(TEST_INPUT_FILE), self._path(TEST_OUTPUT_FILE))
+        tagit.copy_write_method(self._path(TEST_INPUT_FILE), self._path(TEST_OUTPUT_PARTS[0]), *TEST_OUTPUT_PARTS[1:])
         self.assertTrue(os.path.isfile(self._path(TEST_INPUT_FILE)))
         self.assertFalse(os.path.exists(self._path(TEST_OLD_FILE)))
         self.assertTrue(os.path.isfile(self._path(TEST_OUTPUT_FILE)))
@@ -161,7 +162,7 @@ class LinkWriteMethod(_FileModTestCase):
     def test_link_write_method_missing_file(self):
         assert not os.path.exists(self._path(TEST_INPUT_FILE))
         with self.assertRaises(FileNotFoundError):
-            tagit.link_write_method(self._path(TEST_INPUT_FILE), self._path(TEST_OUTPUT_FILE))
+            tagit.link_write_method(self._path(TEST_INPUT_FILE), self._path(TEST_OUTPUT_PARTS[0]), *TEST_OUTPUT_PARTS[1:])
         self.assertFalse(os.path.exists(self._path(TEST_OUTPUT_FILE)))
 
     def test_link_write_method_bad_permission(self):
@@ -169,7 +170,7 @@ class LinkWriteMethod(_FileModTestCase):
         os.symlink(self._path(TEST_INPUT_FILE), self._path(TEST_OLD_FILE))
         os.chmod(self.tmpdir, mode=stat.S_IRUSR|stat.S_IXUSR)  # Disable write access
         with self.assertRaises(PermissionError):
-            tagit.link_write_method(self._path(TEST_INPUT_FILE), self._path(TEST_OUTPUT_FILE))
+            tagit.link_write_method(self._path(TEST_INPUT_FILE), self._path(TEST_OUTPUT_PARTS[0]), *TEST_OUTPUT_PARTS[1:])
         self.assertTrue(os.path.isfile(self._path(TEST_INPUT_FILE)))
         self.assertTrue(os.path.islink(self._path(TEST_OLD_FILE)))
         self.assertFalse(os.path.exists(self._path(TEST_OUTPUT_FILE)))
@@ -177,7 +178,7 @@ class LinkWriteMethod(_FileModTestCase):
     def test_link_write_method_remove_old_and_link(self):
         open(self._path(TEST_INPUT_FILE), 'w').close()
         os.symlink(self._path(TEST_INPUT_FILE), self._path(TEST_OLD_FILE))
-        tagit.link_write_method(self._path(TEST_INPUT_FILE), self._path(TEST_OUTPUT_FILE))
+        tagit.link_write_method(self._path(TEST_INPUT_FILE), self._path(TEST_OUTPUT_PARTS[0]), *TEST_OUTPUT_PARTS[1:])
         self.assertTrue(os.path.isfile(self._path(TEST_INPUT_FILE)))
         self.assertFalse(os.path.exists(self._path(TEST_OLD_FILE)))
         self.assertTrue(os.path.islink(self._path(TEST_OUTPUT_FILE)))
